@@ -1,0 +1,61 @@
+# ─────────────────────────────────────────────────────────────
+# Python
+# ─────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ─────────────────────────────────────────────────────────────
+# Streamlit
+# ─────────────────────────────────────────────────────────────
+.streamlit/secrets.toml
+
+# ─────────────────────────────────────────────────────────────
+# App runtime state
+# ─────────────────────────────────────────────────────────────
+# Date-wise saved rate timelines — machine-local, do NOT commit
+rate_timelines.json
+rate_timelines.json.tmp
+
+# ─────────────────────────────────────────────────────────────
+# Data files
+# ─────────────────────────────────────────────────────────────
+# Real business data — do NOT commit
+*.xlsx
+*.xls
+*.csv
+!sample_data.csv
+
+# If you want to ship a small synthetic sample, force-add it:
+# git add -f data/sample_transaction_data.xlsx
+
+# ─────────────────────────────────────────────────────────────
+# OS / editor noise
+# ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
