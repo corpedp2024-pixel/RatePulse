@@ -7,6 +7,7 @@ import html
 import io
 import json
 import os
+from urllib.request import urlopen
 from pathlib import Path
 from datetime import datetime
 
@@ -474,8 +475,10 @@ MAX_DAILY_CHANGES = 5
 # ─────────────────────────────────────────────────────────────
 # DEFAULT DATA SOURCE
 # ─────────────────────────────────────────────────────────────
-DEFAULT_DATA_PATH = Path(
-    r"D:\EDP\Rate movement vs payment response\transaction_data.xlsx"
+DEFAULT_DATA_PATH = Path(__file__).resolve().parent / "transaction_data.xlsx"
+DEFAULT_DATA_URL = (
+    "https://raw.githubusercontent.com/corpedp2024-pixel/"
+    "RatePulse/main/transaction_data.xlsx"
 )
 
 # ─────────────────────────────────────────────────────────────
@@ -3306,10 +3309,18 @@ def _build_projection_pdf(metal, projection_date, full_day_result,
 # ─────────────────────────────────────────────────────────────
 # DATA SOURCE (default file + optional override)
 # ─────────────────────────────────────────────────────────────
+@st.cache_data(show_spinner=False, ttl="1h")
+def _download_default_data():
+    with urlopen(DEFAULT_DATA_URL, timeout=60) as response:
+        file_bytes = response.read()
+    if not file_bytes:
+        raise OSError("The GitHub workbook was empty.")
+    return file_bytes
+
+
 def render_data_source_sidebar():
     """
-    Load from the default local file if it exists.
-    An explicit upload in the sidebar takes precedence.
+    Prefer an explicit upload, then the local default, then the GitHub copy.
     """
     st.sidebar.markdown("##### 📁 Data source")
 
@@ -3320,7 +3331,8 @@ def render_data_source_sidebar():
         )
     else:
         st.sidebar.caption(
-            f"⚠️ Default file not found:\n`{DEFAULT_DATA_PATH}`"
+            f"ℹ️ Local default file not found:\n`{DEFAULT_DATA_PATH}`\n"
+            "Trying the GitHub copy."
         )
 
     with st.sidebar.expander("📤 Override with upload (optional)",
@@ -3349,7 +3361,18 @@ def render_data_source_sidebar():
             st.sidebar.error(f"❌ Could not read default file: {exc}")
             return None
 
-    return None
+    try:
+        return {
+            "bytes": _download_default_data(),
+            "name": "transaction_data.xlsx",
+            "source": "github",
+        }
+    except OSError as exc:
+        st.sidebar.error(f"❌ Could not download the default file from GitHub: {exc}")
+        st.sidebar.caption(
+            "Upload a transaction file using the sidebar override."
+        )
+        return None
 
 
 # ─────────────────────────────────────────────────────────────
@@ -3397,6 +3420,10 @@ def render_sidebar():
             elif selected.get("source") == "upload":
                 st.sidebar.success(
                     f"📤 Loaded uploaded file: **{selected['name']}**"
+                )
+            elif selected.get("source") == "github":
+                st.sidebar.success(
+                    f"📂 Loaded default file from GitHub: **{selected['name']}**"
                 )
         except Exception as exc:
             st.sidebar.error("❌ Could not read this file.")
@@ -5088,11 +5115,11 @@ def main():
     if df is None or df.empty:
         st.markdown(
             f'<div class="callout callout-info">'
-            f'📂 No data loaded yet.<br><br>'
-            f'The app expects the default file at:<br>'
+            f'📂 No transaction data is available.<br><br>'
+            f'The app checks this local default path first:<br>'
             f'<code>{DEFAULT_DATA_PATH}</code><br><br>'
-            f'If that path is not available, use the sidebar upload to '
-            f'provide a file.'
+            f'If the local file and GitHub copy are unavailable, use the '
+            f'sidebar upload to provide a file.'
             f'</div>',
             unsafe_allow_html=True,
         )

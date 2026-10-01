@@ -29,3 +29,11 @@ the current day's expected activity from the full intraday rate path.
 python -m venv .venv
 source .venv/bin/activate       # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+```
+
+## Data source
+
+The app prefers the local `transaction_data.xlsx` at the configured default
+path. If that file is not available (for example, in a hosted deployment), it
+downloads the workbook from the repository's `main` branch and caches the
+download for one hour. A file uploaded through the sidebar takes precedence.
